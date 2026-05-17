@@ -1,0 +1,454 @@
+% !TEX program = xelatex
+% Pascal, Brianchon, Moebius & Dimer Model — TikZ Diagrams
+% Compiled with: xelatex tikz-diagrams.tex
+\documentclass[12pt,a4paper]{article}
+\usepackage{ctex}
+\usepackage{tikz}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\geometry{margin=2cm}
+
+\usetikzlibrary{
+  calc, patterns, angles, quotes, arrows.meta,
+  decorations.markings, intersections, 3d, perspective,
+  shapes.geometric, backgrounds, fit
+}
+
+% ─── Styles ───────────────────────────────────────────────
+\tikzset{
+  point/.style = {circle, fill=white, draw=black, thick, inner sep=1.5pt, minimum size=6pt},
+  linept/.style = {circle, fill=black, draw=black, thick, inner sep=1.5pt, minimum size=6pt},
+  conic/.style = {thick, blue!60!black},
+  pascalline/.style = {thick, red!70!black, dashed},
+  side/.style = {thick, black!70},
+  diag/.style = {thick, orange!80!black, dashed},
+}
+
+\begin{document}
+
+% ═══════════════════════════════════════════════════════════
+\section{Pascal 定理}
+% ═══════════════════════════════════════════════════════════
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.3]
+  % Circle (conic)
+  \draw[conic] (0,0) circle (2.5);
+  
+  % 6 points on circle
+  \coordinate (A1) at (75:2.5);
+  \coordinate (A2) at (15:2.5);
+  \coordinate (A3) at (-25:2.5);
+  \coordinate (A4) at (-60:2.5);
+  \coordinate (A5) at (-130:2.5);
+  \coordinate (A6) at (-175:2.5);
+  
+  % Draw sides of hexagon
+  \draw[side] (A1) -- (A2) -- (A3) -- (A4) -- (A5) -- (A6) -- cycle;
+  
+  % Label points
+  \foreach \i/\p in {1/A1,2/A2,3/A3,4/A4,5/A5,6/A6} {
+    \node[point, label={\i*30+15:$A_{\i}$}] at (\p) {};
+  }
+  
+  % Intersection points X, Y, Z
+  % X = A1A2 ∩ A4A5
+  \coordinate (X) at (intersection of A1--A2 and A4--A5);
+  % Y = A2A3 ∩ A5A6
+  \coordinate (Y) at (intersection of A2--A3 and A5--A6);
+  % Z = A3A4 ∩ A6A1
+  \coordinate (Z) at (intersection of A3--A4 and A6--A1);
+  
+  % Draw Pascal line
+  \draw[pascalline] (X) -- ($(Z)!1.6!(X)$);
+  
+  \node[point, fill=red!20, label=below left:$X$] at (X) {};
+  \node[point, fill=red!20, label=right:$Y$] at (Y) {};
+  \node[point, fill=red!20, label=above right:$Z$] at (Z) {};
+  
+  \node at (0,-3.2) {Pascal 定理：$X,Y,Z$ 共线（Pascal 线）};
+\end{tikzpicture}
+\caption{Pascal 定理：圆上六点，对边交点共线}
+\end{figure}
+
+% ═══════════════════════════════════════════════════════════
+\section{Brianchon 定理}
+% ═══════════════════════════════════════════════════════════
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.4]
+  % Circle
+  \draw[conic] (0,0) circle (2.5);
+  \coordinate (O) at (0,0);
+  
+  % 6 angles for tangent points
+  \def\angs{{60,12,-25,-65,-135,-175}}
+  
+  % Draw tangent lines and vertices of circumscribed hexagon
+  % For each angle a, tangent direction is a+90
+  \foreach \i [evaluate=\i as \a using {\angs[\i]}, 
+               evaluate=\i as \j using {int(1+mod(\i,6))},
+               evaluate=\j as \b using {\angs[\j]}] in {1,...,6} {
+    % Tangent point on circle
+    \pgfmathsetmacro{\px}{2.5*cos(\a)}
+    \pgfmathsetmacro{\py}{2.5*sin(\a)}
+    \coordinate (T\i) at (\px,\py);
+    
+    % Tangent line: perpendicular to radius, direction angle = a+90
+    \pgfmathsetmacro{\tx}{2.5*cos(\a+90)}
+    \pgfmathsetmacro{\ty}{2.5*sin(\a+90)}
+    \coordinate (TL\i a) at ($(T\i) - 3.5*(\tx,\ty)$);
+    \coordinate (TL\i b) at ($(T\i) + 3.5*(\tx,\ty)$);
+    \draw[side] (TL\i a) -- (TL\i b);
+    
+    % Tangent point marker
+    \node[linept] at (T\i) {};
+    \node[font=\footnotesize] at ($(T\i)+({\a}:0.4)$) {$T_{\i}$};
+  }
+  
+  % Compute 6 vertices as intersections of consecutive tangents
+  \foreach \i in {1,...,6} {
+    \pgfmathsetmacro{\j}{int(1+mod(\i,6))}
+    \coordinate (V\i) at (intersection of TL\i a--TL\i b and TL\j a--TL\j b);
+    \node[point, fill=white] at (V\i) {};
+    \node[font=\footnotesize] at ($(V\i)+(0.2,0.2)$) {$V_{\i}$};
+  }
+  
+  % Connect vertices to form circumscribed hexagon
+  \draw[side, thick, green!50!black] (V1) -- (V2) -- (V3) -- (V4) -- (V5) -- (V6) -- cycle;
+  
+  % Three main diagonals of the hexagon
+  \draw[diag, very thick] (V1) -- (V4);
+  \draw[diag, very thick] (V2) -- (V5);
+  \draw[diag, very thick] (V3) -- (V6);
+  
+  % Brianchon point
+  \coordinate (B) at (intersection of V1--V4 and V2--V5);
+  \node[point, fill=red!20, label=above right:{$B$}] at (B) {};
+  
+  \node at (0,-3.8) {Brianchon：外切六边形三对对顶点连线共点于 $B$};
+\end{tikzpicture}
+\caption{Brianchon 定理：圆外切六边形，对顶点连线共点}
+\end{figure}
+
+% ═══════════════════════════════════════════════════════════
+\section{Möbius 球极投影}
+% ═══════════════════════════════════════════════════════════
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.8]
+  % The sphere S^2
+  \draw[thick] (0,0) circle (1.5);
+  \draw[dashed] (-1.5,0) arc (180:360:1.5 and 0.45);
+  \draw[thick] (-1.5,0) arc (180:0:1.5 and 0.45);
+  
+  % North pole
+  \node[point, fill=blue!30, label=above:{$N=(0,0,1)$}] at (0,1.5) {};
+  
+  % South pole
+  \node[point, label=below:{$S$}] at (0,-1.5) {};
+  
+  % A point on the sphere
+  \coordinate (P) at (-0.8,0.6);
+  \node[point, fill=red!20, label=above left:{$P'$}] at (P) {};
+  
+  % The plane z=0 (equator)
+  \draw[thick, gray] (-2.2,0) -- (2.2,0);
+  \node[gray] at (2.4,0) {$\mathbb{R}^2$};
+  
+  % Projection line from N through P' to plane
+  \coordinate (p) at (-3.0,0);
+  \draw[dashed, gray] (0,1.5) -- (p);
+  \node[point, fill=green!30, label=below:{$P$}] at (p) {};
+  
+  % A circle on the sphere → becomes a plane section
+  \draw[blue!50!black, thick] plot[domain=0:360, samples=40] 
+    ({0.9*cos(\x)}, {0.3 + 0.22*sin(\x)});
+  
+  % The plane that cuts out the circle
+  \draw[blue!30, opacity=0.5] (-2,-0.1) -- (2,-0.1) -- (2,0.7) -- (-2,0.7) -- cycle;
+  
+  \node[blue!50!black] at (1.6,0.4) {圆};
+  \node[blue!30] at (-1.6,0.8) {平面 $\sigma$};
+  
+  \node at (0,-2) {球极投影：平面 $\mathbb{R}^2 \to$ 球面 $S^2$，圆 $\mapsto$ 平面截线};
+\end{tikzpicture}
+\caption{Möbius 球极投影：点、圆、直线的对应关系}
+\end{figure}
+
+% ═══════════════════════════════════════════════════════════
+\section{回路条件（Circuit）}
+% ═══════════════════════════════════════════════════════════
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.5]
+  % Left: circuit around a black vertex (points are collinear)
+  \begin{scope}[local bounding box=L]
+    \node[linept, label=below:{黑顶点（线 $\ell$）}] at (0,0) (B) {};
+    \coordinate (P1) at (-1.5,1.2);
+    \coordinate (P2) at (0,1.8);
+    \coordinate (P3) at (1.5,1.2);
+    \coordinate (P4) at (1,-0.5);
+    
+    \draw[side] (P1) -- (P4);
+    
+    \draw[side, thick, red!60!black] (P1) -- (P2) -- (P3);
+    \draw[side] (P3) -- (P4);
+    
+    \draw[gray] (B) -- (P1);
+    \draw[gray] (B) -- (P2);
+    \draw[gray] (B) -- (P3);
+    \draw[gray] (B) -- (P4);
+    
+    \foreach \i/\p in {1/P1,2/P2,3/P3,4/P4} {
+      \node[point, fill=white, label=above:{点\i}] at (\p) {};
+    }
+    
+    \node at (0,-1) {回路：白邻居共线};
+  \end{scope}
+  
+  % Right: circuit around a white vertex (lines are concurrent)
+  \begin{scope}[xshift=5cm, local bounding box=R]
+    \node[point, fill=white, label=below:{白顶点（点 $P$）}] at (0,0) (W) {};
+    \coordinate (L1a) at (-1.8,0.8);
+    \coordinate (L1b) at (1.8,-0.8);
+    \coordinate (L2a) at (-1.5,1.5);
+    \coordinate (L2b) at (1.5,-1.5);
+    \coordinate (L3a) at (0,1.8);
+    \coordinate (L3b) at (0,-1.8);
+    
+    \draw[side] (L1a) -- (L1b) node[right] {线1};
+    \draw[side, thick, red!60!black] (L2a) -- (L2b) node[right] {线2};
+    \draw[side, thick, red!60!black] (L3a) -- (L3b) node[right] {线3};
+    
+    \foreach \p in {L1a,L1b,L2a,L2b,L3a,L3b} {
+      \node[linept] at (\p) {};
+    }
+    
+    \node at (0,-2.3) {回路：黑邻居共点};
+  \end{scope}
+\end{tikzpicture}
+\caption{回路条件：左——黑顶点的白邻居共线；右——白顶点的黑邻居共点}
+\end{figure}
+
+% ═══════════════════════════════════════════════════════════
+\section{相干四边形（Coherence）}
+% ═══════════════════════════════════════════════════════════
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.8]
+  % Four vertices of a quadrilateral tile: A (white), c (black), B (white), d (black)
+  \coordinate (A) at (-1,0);
+  \coordinate (B) at (1,0);
+  
+  \node[point, fill=white, label=below left:{$A$}] at (A) {};
+  \node[point, fill=white, label=below right:{$B$}] at (B) {};
+  
+  % Lines c and d through A and B
+  \coordinate (c_top) at (-0.7,1.5);
+  \coordinate (c_bot) at (-1.3,-1.5);
+  \coordinate (d_top) at (0.7,1.5);
+  \coordinate (d_bot) at (1.3,-1.5);
+  
+  \draw[side, thick, blue!60!black] (c_top) -- node[right] {$c$} (c_bot);
+  \draw[side, thick, blue!60!black] (d_top) -- node[left] {$d$} (d_bot);
+  
+  % Line AB
+  \draw[side, thick, red!60!black] (-1.5,0) -- (1.5,0);
+  \node[red!60!black] at (0,0.18) {$AB$};
+  
+  % Intersection point = c ∩ d
+  \coordinate (I) at (intersection of c_top--c_bot and d_top--d_bot);
+  \node[point, fill=red!20, label=right:{$c \cap d$}] at (I) {};
+  
+  % Mark the tile
+  \draw[pattern=north east lines, pattern color=gray!30, opacity=0.5]
+    (A) -- (c_top) -- (B) -- (d_top) -- cycle;
+  
+  \node at (0,-2.2) {相干四边形：$[A,c,B,d]=1 \iff AB,\;c,\;d$ 三线共点};
+\end{tikzpicture}
+\caption{相干条件：四边形拼图面的几何意义}
+\end{figure}
+
+% ═══════════════════════════════════════════════════════════
+\section{城区改造（Urban Renewal）}
+% ═══════════════════════════════════════════════════════════
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.5]
+  % Before
+  \begin{scope}[local bounding box=before]
+    \coordinate (A) at (-1,1);
+    \coordinate (B) at (1,1);
+    \coordinate (c1) at (-1.3,0.5);
+    \coordinate (c2) at (-0.7,0.5);
+    \coordinate (d1) at (0.7,0.5);
+    \coordinate (d2) at (1.3,0.5);
+    \coordinate (C_bot) at (-1,-1);
+    \coordinate (D_bot) at (1,-1);
+    
+    % White vertices (points)
+    \node[point, fill=white, label=above:{$A$}] at (A) {};
+    \node[point, fill=white, label=above:{$B$}] at (B) {};
+    \node[point, fill=white, label=below:{$C_1,\dots,C_k$}] at (c1) {};
+    \node[point, fill=white, label=below:{$D_1,\dots,D_l$}] at (d1) {};
+    
+    % Black vertices (lines)
+    \node[linept, label=left:{$c$}] at (-1,0.75) {};
+    \node[linept, label=right:{$d$}] at (1,0.75) {};
+    
+    \draw[side] (A) -- (-1,0.75) -- (c1);
+    \draw[side] (B) -- (1,0.75) -- (d1);
+    \draw[side] (-1,0.75) -- (1,0.75);
+    
+    \node at (0,-0.3) {城区改造前};
+  \end{scope}
+  
+  % Arrow
+  \draw[->, thick] (2,0) -- (3,0) node[above,midway] {改造};
+  
+  % After
+  \begin{scope}[xshift=5cm]
+    \coordinate (A) at (-1,1);
+    \coordinate (B) at (1,1);
+    \coordinate (E) at (-0.5,0);
+    \coordinate (F) at (0.5,0);
+    \coordinate (g) at (-0.5,-1);
+    \coordinate (h) at (0.5,-1);
+    
+    \node[point, fill=white, label=above:{$A$}] at (A) {};
+    \node[point, fill=white, label=above:{$B$}] at (B) {};
+    \node[point, fill=white, label=right:{$E$}] at (E) {};
+    \node[point, fill=white, label=left:{$F$}] at (F) {};
+    
+    \node[linept, label=left:{$g$}] at (g) {};
+    \node[linept, label=right:{$h$}] at (h) {};
+    
+    \draw[side] (A) -- (E) -- (B) -- (F) -- (A);
+    \draw[side] (E) -- (g) -- (F) -- (h) -- (E);
+    
+    \node at (0,-1.5) {城区改造后：几何数据变了，组合结构还原};
+  \end{scope}
+\end{tikzpicture}
+\caption{城区改造：局部变形保持相干双回路构型}
+\end{figure}
+
+% ═══════════════════════════════════════════════════════════
+\section{球面拼图 —— Pascal 定理的 Dimer Model 编码}
+% ═══════════════════════════════════════════════════════════
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.3, 
+  % 3D-like sphere with tiling
+]
+  % Sphere outline
+  \draw[thick] (0,0) circle (2.5);
+  
+  % Three "faces" of the tiling — a tetrahedron-like projection
+  % Face 1: top
+  \coordinate (T) at (0,2.2);
+  \coordinate (L) at (-1.8,-1.2);
+  \coordinate (R) at (1.8,-1.2);
+  
+  % White/Black vertices on the sphere
+  \foreach \p/\col/\lab in {
+    T/white/A_1A_2,
+    L/white/A_3A_4,
+    R/white/A_5A_6}
+  {
+    \node[point, fill=\col] at (\p) {};
+  }
+  
+  % Three black vertices (the Pascal points X,Y,Z)
+  \coordinate (X) at (0,0.2);
+  \coordinate (Y) at (-1, -0.3);
+  \coordinate (Z) at (1, -0.3);
+  
+  \foreach \p/\lab in {X/X,Y/Y,Z/Z} {
+    \node[linept, label=below:{$\lab$}] at (\p) {};
+  }
+  
+  % Connect to form 3 triangular faces
+  \draw[side, thick] (T) -- (X) -- (L);
+  \draw[side, thick] (L) -- (Y) -- (R);
+  \draw[side, thick] (R) -- (Z) -- (T);
+  
+  % Center: the Pascal line (great circle through N)
+  \draw[pascalline, thick] (-2.5,0.15) -- (2.5,0.15);
+  \node[red!70!black] at (0,-0.3) {Pascal 线（过北极 $N$ 的大圆）};
+  
+  % Labels for faces
+  \node at (0,1.3) {面1：$A_1A_2\cap A_4A_5$};
+  \node at (-1.3,-0.9) {面2：$A_2A_3\cap A_5A_6$};
+  \node at (1.3,-0.9) {面3：$A_3A_4\cap A_6A_1$};
+  
+  \node at (0,-2.0) {球面上的 3 面拼图：两面相干 $\implies$ 第三面自动相干};
+\end{tikzpicture}
+\caption{球面拼图：Pascal 定理的 3 面编码（类比 Desargues 的 4 面四面体编码）}
+\end{figure}
+
+% ═══════════════════════════════════════════════════════════
+\section{Pascal 定理的 Menelaus 证明结构}
+% ═══════════════════════════════════════════════════════════
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=1.5]
+  % Triangle formed by lines AB, CD, EF
+  \coordinate (U) at (0,3);
+  \coordinate (V) at (-2.5,-1);
+  \coordinate (W) at (2.5,-1);
+  
+  % Triangle
+  \draw[side, fill=gray!5] (U) -- (V) -- (W) -- cycle;
+  \node[point, fill=white, label=above:{$U$}] at (U) {};
+  \node[point, fill=white, label=below left:{$V$}] at (V) {};
+  \node[point, fill=white, label=below right:{$W$}] at (W) {};
+  
+  % Three Menelaus transversals
+  % 1. BC cuts triangle
+  \coordinate (BC1) at ($(V)!0.4!(U)$);
+  \coordinate (BC2) at ($(U)!0.55!(W)$);
+  \draw[side, blue!60!black] (BC1) -- (BC2);
+  \node[blue!60!black, font=\small] at ($(BC1)!0.5!(BC2)+(0.3,0.1)$) {$BC$};
+  
+  % 2. DE cuts triangle
+  \coordinate (DE1) at ($(V)!0.7!(W)$);
+  \coordinate (DE2) at ($(U)!0.75!(W)$);
+  \draw[side, blue!60!black] (DE1) -- (DE2);
+  \node[blue!60!black, font=\small] at ($(DE1)!0.5!(DE2)+(-0.2,-0.15)$) {$DE$};
+  
+  % 3. FA cuts triangle
+  \coordinate (FA1) at ($(V)!0.2!(U)$);
+  \coordinate (FA2) at ($(V)!0.6!(W)$);
+  \draw[side, blue!60!black] (FA1) -- (FA2);
+  \node[blue!60!black, font=\small] at ($(FA1)!0.5!(FA2)+(0.25,-0.15)$) {$FA$};
+  
+  % Pascal points X,Y,Z
+  \coordinate (X) at (intersection of BC1--BC2 and DE1--DE2);
+  \coordinate (Y) at (intersection of DE1--DE2 and FA1--FA2);
+  \coordinate (Z) at (intersection of FA1--FA2 and BC1--BC2);
+  
+  \node[point, fill=red!20] at (X) {};
+  \node[point, fill=red!20] at (Y) {};
+  \node[point, fill=red!20] at (Z) {};
+  \node[font=\footnotesize] at ($(X)+(0.15,0.15)$) {$X$};
+  \node[font=\footnotesize] at ($(Y)+(-0.15,-0.15)$) {$Y$};
+  \node[font=\footnotesize] at ($(Z)+(0.15,-0.15)$) {$Z$};
+  
+  % Pascal line through X,Y,Z
+  \draw[pascalline, thick] (X) -- ($(Z)!2.5!(X)$);
+  
+  \node at (0,-1.8) {三次 Menelaus $\times$ 圆锥曲线交比恒等式 $\implies$ Pascal 线};
+\end{tikzpicture}
+\caption{Menelaus 证明结构：三次截线 = 球面上的三个相干拼图面}
+\end{figure}
+
+\end{document}
