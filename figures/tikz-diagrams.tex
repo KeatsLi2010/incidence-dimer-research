@@ -78,57 +78,71 @@
 
 \begin{figure}[ht]
 \centering
-\begin{tikzpicture}[scale=1.4]
+\begin{tikzpicture}[scale=1.5]
   % Circle
-  \draw[conic] (0,0) circle (2.5);
-  \coordinate (O) at (0,0);
+  \draw[conic] (0,0) circle (2.0);
   
-  % 6 angles for tangent points
-  \def\angs{{60,12,-25,-65,-135,-175}}
+  % Tangent points on the circle (angles chosen so adjacent tangents intersect)
+  \coordinate (T1) at (60:2.0);
+  \coordinate (T2) at (15:2.0);
+  \coordinate (T3) at (-30:2.0);
+  \coordinate (T4) at (-75:2.0);
+  \coordinate (T5) at (-120:2.0);
+  \coordinate (T6) at (-165:2.0);
   
-  % Draw tangent lines and vertices of circumscribed hexagon
-  % For each angle a, tangent direction is a+90
-  \foreach \i [evaluate=\i as \a using {\angs[\i]}, 
-               evaluate=\i as \j using {int(1+mod(\i,6))},
-               evaluate=\j as \b using {\angs[\j]}] in {1,...,6} {
-    % Tangent point on circle
-    \pgfmathsetmacro{\px}{2.5*cos(\a)}
-    \pgfmathsetmacro{\py}{2.5*sin(\a)}
+  % Draw tangent lines: at angle a, tangent direction = a+90
+  % Compute endpoints manually
+  \foreach \i/\a in {1/60,2/15,3/-30,4/-75,5/-120,6/-165} {
+    \pgfmathsetmacro{\px}{2.0*cos(\a)}
+    \pgfmathsetmacro{\py}{2.0*sin(\a)}
+    \pgfmathsetmacro{\dx}{2.0*cos(\a+90)}
+    \pgfmathsetmacro{\dy}{2.0*sin(\a+90)}
     \coordinate (T\i) at (\px,\py);
-    
-    % Tangent line: perpendicular to radius, direction angle = a+90
-    \pgfmathsetmacro{\tx}{2.5*cos(\a+90)}
-    \pgfmathsetmacro{\ty}{2.5*sin(\a+90)}
-    \coordinate (TL\i a) at ($(T\i) - 3.5*(\tx,\ty)$);
-    \coordinate (TL\i b) at ($(T\i) + 3.5*(\tx,\ty)$);
-    \draw[side] (TL\i a) -- (TL\i b);
-    
-    % Tangent point marker
+    \draw[side] ($(\px,\py) - 3.2*(\dx,\dy)$) -- ++(6.4*\dx,6.4*\dy);
     \node[linept] at (T\i) {};
-    \node[font=\footnotesize] at ($(T\i)+({\a}:0.4)$) {$T_{\i}$};
+    \node[font=\footnotesize] at ($(T\i)+({\a}:0.35)$) {$T_{\i}$};
   }
   
-  % Compute 6 vertices as intersections of consecutive tangents
+  % Vertices of circumscribed hexagon = adjacent tangent intersections
+  % Pre-compute these with known geometry:
+  % V_i = intersection of tangent at T_i and tangent at T_{i+1}
+  \coordinate (TS1) at ($(60:2.0) - 3.2*(150:1.0)$);
+  \coordinate (TE1) at ($(60:2.0) + 3.2*(150:1.0)$);
+  \coordinate (TS2) at ($(15:2.0) - 3.2*(105:1.0)$);
+  \coordinate (TE2) at ($(15:2.0) + 3.2*(105:1.0)$);
+  \coordinate (TS3) at ($(-30:2.0) - 3.2*(60:1.0)$);
+  \coordinate (TE3) at ($(-30:2.0) + 3.2*(60:1.0)$);
+  \coordinate (TS4) at ($(-75:2.0) - 3.2*(15:1.0)$);
+  \coordinate (TE4) at ($(-75:2.0) + 3.2*(15:1.0)$);
+  \coordinate (TS5) at ($(-120:2.0) - 3.2*(-30:1.0)$);
+  \coordinate (TE5) at ($(-120:2.0) + 3.2*(-30:1.0)$);
+  \coordinate (TS6) at ($(-165:2.0) - 3.2*(-75:1.0)$);
+  \coordinate (TE6) at ($(-165:2.0) + 3.2*(-75:1.0)$);
+  
+  \coordinate (V1) at (intersection of TS1--TE1 and TS2--TE2);
+  \coordinate (V2) at (intersection of TS2--TE2 and TS3--TE3);
+  \coordinate (V3) at (intersection of TS3--TE3 and TS4--TE4);
+  \coordinate (V4) at (intersection of TS4--TE4 and TS5--TE5);
+  \coordinate (V5) at (intersection of TS5--TE5 and TS6--TE6);
+  \coordinate (V6) at (intersection of TS6--TE6 and TS1--TE1);
+  
   \foreach \i in {1,...,6} {
-    \pgfmathsetmacro{\j}{int(1+mod(\i,6))}
-    \coordinate (V\i) at (intersection of TL\i a--TL\i b and TL\j a--TL\j b);
     \node[point, fill=white] at (V\i) {};
-    \node[font=\footnotesize] at ($(V\i)+(0.2,0.2)$) {$V_{\i}$};
+    \node[font=\footnotesize] at ($(V\i)+(0.25,0.25)$) {$V_{\i}$};
   }
   
-  % Connect vertices to form circumscribed hexagon
+  % Circumscribed hexagon
   \draw[side, thick, green!50!black] (V1) -- (V2) -- (V3) -- (V4) -- (V5) -- (V6) -- cycle;
   
-  % Three main diagonals of the hexagon
+  % Three diagonals connecting opposite vertices
   \draw[diag, very thick] (V1) -- (V4);
   \draw[diag, very thick] (V2) -- (V5);
   \draw[diag, very thick] (V3) -- (V6);
   
-  % Brianchon point
   \coordinate (B) at (intersection of V1--V4 and V2--V5);
   \node[point, fill=red!20, label=above right:{$B$}] at (B) {};
   
-  \node at (0,-3.8) {Brianchon：外切六边形三对对顶点连线共点于 $B$};
+  \node at (0,-3.2) {Brianchon：外切六边形三对对角线共点于 $B$};
 \end{tikzpicture}
 \caption{Brianchon 定理：圆外切六边形，对顶点连线共点}
 \end{figure}
